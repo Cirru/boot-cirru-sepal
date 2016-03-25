@@ -10,7 +10,7 @@
 
 (require '[cirru-sepal.core :refer :all])
 
-(def +version+ "0.1.0")
+(def +version+ "0.1.1")
 
 (task-options!
   pom {:project     'cirru/boot-cirru-sepal
@@ -23,12 +23,10 @@
 (set-env! :repositories #(conj % ["clojars" {:url "https://clojars.org/repo/"}]))
 
 (deftask just-compile []
-  (cirru-sepal :paths ["cirru-demo"]
-               :watch false))
+  (cirru-sepal :paths ["cirru-demo"]))
 
 (deftask watch-compile []
-  (cirru-sepal :paths ["cirru-demo"]
-               :watch true))
+  (cirru-sepal :paths ["cirru-demo"] :watch true :alone true))
 
 (deftask build []
   (comp

@@ -50,25 +50,26 @@
         relativePath (clojure.string/replace filename (cwd) "")]
       (compile-file relativePath))))
 
-(defn- watch-all [paths]
+(defn- watch-all [paths alone]
   (println "Start watching files.")
   (hawk/watch! [{:paths paths
                  :handler (fn [context event]
                             (listen-file event)
                             context)}])
-  (loop []
-    (Thread/sleep 400)
-    (recur)))
+  (if alone (loop []
+      (Thread/sleep 400)
+      (recur))))
 
 (boot/deftask cirru-sepal
   "task to compile Cirru into Clojure"
   [p paths VAL [str]  "Paths to compile"
-   w watch bool   "Enable watch mode"]
-  (let []
+   w watch      bool   "Enable watch mode"
+   a alone      bool   "Run a standalone task"]
+  (let [watching (if (some? watch) watch false)]
     (fn [next-task]
       (fn [fileset]
         (let []
-          (if watch
-            (watch-all paths)
+          (if watching
+            (watch-all paths (if (some? alone) alone false))
             (compile-all paths))
           (next-task fileset))))))
