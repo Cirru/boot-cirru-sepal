@@ -4,13 +4,14 @@
 
   :dependencies '[[org.clojure/clojure  "1.8.0"   :scope "provided"]
                   [boot/core            "2.3.0"   :scope "provided"]
+                  [org.clojure/data.json "0.2.6"]
                   [cirru/sepal          "0.0.11"]
                   [cirru/parser         "0.0.3"]
                   [hawk                 "0.2.5"]])
 
 (require '[cirru-sepal.core :refer :all])
 
-(def +version+ "0.1.2")
+(def +version+ "0.1.3")
 
 (task-options!
   pom {:project     'cirru/boot-cirru-sepal

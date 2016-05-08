@@ -5,26 +5,41 @@
             [boot.core :as boot]
             [clojure.java.io :as io]
             [clojure.string :refer (replace-first)]
+            [clojure.data.json :as json]
             [hawk.core :as hawk])
   (:import (java.io File)))
 
 (defn- cwd [] (str (System/getenv "PWD") "/"))
 
 (defn- replace-extension [source-path]
-  (replace-first source-path ".cirru" ""))
+  (-> source-path
+    (replace-first ".cirru" "")
+    (replace-first ".json" "")))
 
 (defn- replace-filename [source-path]
   (-> source-path
     (replace-first "cirru-" "")
-    (replace-first ".cirru" "")))
+    (replace-extension)))
+
+(defn- is-cirru [f]
+  (some? (re-matches #".*\.cirru" f)))
+
+(defn- is-json [f]
+  (some? (re-matches #".*\.json" f)))
 
 (defn- compile-code [code]
   (sepal/make-code (parser/pare code "")))
 
+(defn- compile-json-code [code]
+  (sepal/make-code (json/read-str code)))
+
 (defn- compile-file [filename]
   (println (str "Compiling: " filename))
   (let
-    [result (compile-code (slurp filename))]
+    [source (slurp filename)
+     result (if (is-cirru filename)
+                (compile-code source)
+                (compile-json-code source))]
     (with-open [wrtr (io/writer (replace-extension filename))]
       (.write wrtr result))
     (io/make-parents (replace-filename filename))
@@ -32,19 +47,20 @@
       (File. (replace-extension filename))
       (File. (replace-filename filename)))))
 
-(defn- is-cirru [f]
-  (some? (re-matches #".*\.cirru" (.getName f))))
-
 (defn- compile-all [paths]
   (println "Start compiling files.")
   (doall (map
-    (fn [path] (compile-file path))
-    (filter is-cirru
+    (fn [path] (compile-file (.getName path)))
+    (filter
+      (fn [x] (or (is-cirru (.getName x)) (is-json (.getName x))))
       (apply concat
         (map (fn [path] (file-seq (io/file path))) paths))))))
 
 (defn- listen-file [event]
-  (if (is-cirru (:file event))
+  (if
+    (or
+      (is-cirru (.getName (:file event)))
+      (is-json (.getName (:file event))))
     (let
       [ filename (.getAbsolutePath (:file event))
         relativePath (clojure.string/replace filename (cwd) "")]
