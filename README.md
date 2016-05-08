@@ -2,7 +2,7 @@
 boot task for Cirru Sepal
 ----
 
-Notice: this task is using a standalone watcher since not well intergrated for `boot-reload`. Still WIP.
+> Notice: this task is using a standalone watcher since not well intergrated for `boot-reload`.
 
 ### Usage
 
@@ -30,9 +30,15 @@ Option `:alone` is designed to add a piece of code to bypass quitting:
 
 ```clojure
 (if alone (loop []
-    (Thread/sleep 400)
+    (Thread/sleep 300)
     (recur)))
 ```
+
+Supported extensions:
+
+* `.cirru`
+* `.json`
+* `.edn`
 
 ### License
 

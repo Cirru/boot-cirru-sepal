@@ -14,7 +14,8 @@
 (defn- replace-extension [source-path]
   (-> source-path
     (replace-first ".cirru" "")
-    (replace-first ".json" "")))
+    (replace-first ".json" "")
+    (replace-first ".edn" "")))
 
 (defn- replace-filename [source-path]
   (-> source-path
@@ -27,19 +28,37 @@
 (defn- is-json [f]
   (some? (re-matches #".*\.json" f)))
 
+(defn- is-edn [f]
+  (some? (re-matches #".*\.edn" f)))
+
+(defn- is-source [f]
+  (or
+    (is-cirru (.getName f))
+    (is-json (.getName f))
+    (is-edn (.getName f))))
+
 (defn- compile-code [code]
   (sepal/make-code (parser/pare code "")))
 
 (defn- compile-json-code [code]
   (sepal/make-code (json/read-str code)))
 
-(defn- compile-file [filename]
-  (println (str "Compiling: " filename))
+(defn- compile-edn-code [code]
+  (sepal/make-code (read-string code)))
+
+(defn- shorten-filename [f]
+  (clojure.string/replace (.getAbsolutePath f) (cwd) ""))
+
+(defn- compile-file [f]
+  (println (str "Compiling: " f))
   (let
-    [source (slurp filename)
-     result (if (is-cirru filename)
-                (compile-code source)
-                (compile-json-code source))]
+    [
+     filename (shorten-filename f)
+     source (slurp filename)
+     result (cond
+              (is-cirru filename) (compile-code source)
+              (is-json filename) (compile-json-code source)
+              :else (compile-edn-code source))]
     (with-open [wrtr (io/writer (replace-extension filename))]
       (.write wrtr result))
     (io/make-parents (replace-filename filename))
@@ -48,23 +67,19 @@
       (File. (replace-filename filename)))))
 
 (defn- compile-all [paths]
-  (println "Start compiling files.")
-  (doall (map
-    (fn [path] (compile-file (.getName path)))
-    (filter
-      (fn [x] (or (is-cirru (.getName x)) (is-json (.getName x))))
-      (apply concat
-        (map (fn [path] (file-seq (io/file path))) paths))))))
+  (println "Start compiling files in:" paths)
+  (->> paths
+    (map (fn [path]
+      (file-seq (io/file path))))
+    (apply concat)
+    (filter is-source)
+    (map (fn [path] (compile-file path)))
+    (doall)))
 
 (defn- listen-file [event]
   (if
-    (or
-      (is-cirru (.getName (:file event)))
-      (is-json (.getName (:file event))))
-    (let
-      [ filename (.getAbsolutePath (:file event))
-        relativePath (clojure.string/replace filename (cwd) "")]
-      (compile-file relativePath))))
+    (is-source (:file event))
+    (compile-file (:file event))))
 
 (defn- watch-all [paths alone]
   (println "Start watching files.")
@@ -73,7 +88,7 @@
                             (listen-file event)
                             context)}])
   (if alone (loop []
-      (Thread/sleep 400)
+      (Thread/sleep 300)
       (recur))))
 
 (boot/deftask cirru-sepal
