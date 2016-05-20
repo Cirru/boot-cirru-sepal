@@ -40,6 +40,15 @@ Supported extensions:
 * `.json`
 * `.edn`
 
+Or, it can be used as a Cirru code transformer:
+
+```clj
+(comp
+  (watch)
+  (transform-cirru)
+  (cljs))
+```
+
 ### License
 
 MIT

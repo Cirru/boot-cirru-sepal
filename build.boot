@@ -1,6 +1,7 @@
 
 (set-env!
   :resource-paths #{"src/"}
+  :source-paths #{"cirru-src"}
 
   :dependencies '[[org.clojure/clojure  "1.8.0"   :scope "provided"]
                   [boot/core            "2.3.0"   :scope "provided"]
@@ -11,7 +12,7 @@
 
 (require '[cirru-sepal.core :refer :all])
 
-(def +version+ "0.1.4")
+(def +version+ "0.1.5")
 
 (task-options!
   pom {:project     'cirru/boot-cirru-sepal
@@ -40,3 +41,8 @@
   (comp
    (build)
    (push :repo "clojars" :gpg-sign (not (.endsWith +version+ "-SNAPSHOT")))))
+
+(deftask demo-transform []
+  (comp
+    (transform-cirru)
+    (target)))

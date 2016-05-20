@@ -46,6 +46,12 @@
 (defn- compile-edn-code [code]
   (sepal/make-code (read-string code)))
 
+(defn- compile-source [filename source]
+  (cond
+    (is-cirru filename) (compile-code source)
+    (is-json filename) (compile-json-code source)
+    :else (compile-edn-code source)))
+
 (defn- shorten-filename [f]
   (clojure.string/replace (.getAbsolutePath f) (cwd) ""))
 
@@ -55,10 +61,7 @@
     [
      filename (shorten-filename f)
      source (slurp filename)
-     result (cond
-              (is-cirru filename) (compile-code source)
-              (is-json filename) (compile-json-code source)
-              :else (compile-edn-code source))]
+     result (compile-source filename source)]
     (with-open [wrtr (io/writer (replace-extension filename))]
       (.write wrtr result))
     (io/make-parents (replace-filename filename))
@@ -104,3 +107,21 @@
             (watch-all paths (if (some? alone) alone false))
             (compile-all paths))
           (next-task fileset))))))
+
+(boot/deftask transform-cirru
+  "task to transform data into Clojure"
+  []
+  (boot/with-pre-wrap fileset
+    (let [json-files (boot/by-re [#"\.json$" #"\.edn$" #"\.cirru$"]
+            (boot/input-files fileset))
+          tmp (boot/tmp-dir!)]
+      (doseq [json-file json-files]
+        (let [json-name (boot/tmp-path json-file)
+              new-target (io/file tmp (replace-extension json-name))]
+          (io/make-parents new-target)
+          (spit new-target
+            (compile-source json-name (slurp (boot/tmp-file json-file))))))
+      (-> fileset
+        (boot/add-resource tmp)
+        (boot/rm json-files)
+        (boot/commit!)))))
