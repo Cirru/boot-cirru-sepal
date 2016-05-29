@@ -20,6 +20,7 @@
 (defn- replace-filename [source-path]
   (-> source-path
     (replace-first "cirru-" "")
+    (replace-first "cirru/" "")
     (replace-extension)))
 
 (defn- is-cirru [f]
@@ -41,10 +42,10 @@
   (sepal/make-code (parser/pare code "")))
 
 (defn- compile-json-code [code]
-  (sepal/make-code (json/read-str code)))
+  (sepal/make-code (json/read-str (if (= "" code) "[]" code))))
 
 (defn- compile-edn-code [code]
-  (sepal/make-code (read-string code)))
+  (sepal/make-code (read-string (if (= "" code) "[]" code))))
 
 (defn- compile-source [filename source]
   (cond
