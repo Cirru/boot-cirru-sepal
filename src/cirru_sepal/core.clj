@@ -47,11 +47,19 @@
 (defn- compile-edn-code [code]
   (sepal/make-code (read-string (if (= "" code) "[]" code))))
 
+(defonce code-caches (atom {}))
+
 (defn- compile-source [filename source]
-  (cond
-    (is-cirru filename) (compile-code source)
-    (is-json filename) (compile-json-code source)
-    :else (compile-edn-code source)))
+  (if (contains? @code-caches source)
+    (do
+      (get @code-caches source))
+    (let [code
+          (cond
+            (is-cirru filename) (compile-code source)
+            (is-json filename) (compile-json-code source)
+            :else (compile-edn-code source))]
+      (swap! code-caches assoc source code)
+      code)))
 
 (defn- shorten-filename [f]
   (clojure.string/replace (.getAbsolutePath f) (cwd) ""))
