@@ -6,12 +6,11 @@
                   [boot/core            "2.3.0"   :scope "provided"]
                   [org.clojure/data.json "0.2.6"]
                   [cirru/sepal          "0.0.11"]
-                  [cirru/parser         "0.0.3"]
-                  [hawk                 "0.2.5"]])
+                  [cirru/parser         "0.0.3"]])
 
 (require '[cirru-sepal.core :refer :all])
 
-(def +version+ "0.1.7")
+(def +version+ "0.1.8")
 
 (task-options!
   pom {:project     'cirru/boot-cirru-sepal
@@ -22,12 +21,6 @@
        :license     {"MIT" "http://opensource.org/licenses/mit-license.php"}})
 
 (set-env! :repositories #(conj % ["clojars" {:url "https://clojars.org/repo/"}]))
-
-(deftask just-compile []
-  (cirru-sepal :paths ["cirru-demo"]))
-
-(deftask watch-compile []
-  (cirru-sepal :paths ["cirru-demo"] :watch true :alone true))
 
 (deftask build []
   (set-env!
@@ -45,14 +38,14 @@
 
 (deftask demo-transform []
   (set-env!
-    :source-paths #{"cirru-demo"})
+    :source-paths #{"cirru/"})
   (comp
     (transform-cirru)
     (target)))
 
 (deftask watch-transform []
   (set-env!
-    :source-paths #{"cirru-demo"})
+    :source-paths #{"cirru/"})
   (comp
     (watch)
     (transform-cirru)
