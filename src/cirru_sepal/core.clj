@@ -47,19 +47,12 @@
 (defn- compile-edn-code [code]
   (sepal/make-code (read-string (if (= "" code) "[]" code))))
 
-(defonce code-caches (atom {}))
-
 (defn- compile-source [filename source]
-  (if (contains? @code-caches source)
-    (do
-      (get @code-caches source))
-    (let [code
-          (cond
-            (is-cirru filename) (compile-code source)
-            (is-json filename) (compile-json-code source)
-            :else (compile-edn-code source))]
-      (swap! code-caches assoc source code)
-      code)))
+  (println "compile file:" filename)
+  (cond
+    (is-cirru filename) (compile-code source)
+    (is-json filename) (compile-json-code source)
+    :else (compile-edn-code source)))
 
 (defn- shorten-filename [f]
   (clojure.string/replace (.getAbsolutePath f) (cwd) ""))
@@ -119,18 +112,23 @@
 
 (boot/deftask transform-cirru
   "task to transform data into Clojure"
-  []
-  (boot/with-pre-wrap fileset
-    (let [json-files (boot/by-re [#"\.json$" #"\.edn$" #"\.cirru$"]
-            (boot/input-files fileset))
-          tmp (boot/tmp-dir!)]
-      (doseq [json-file json-files]
-        (let [json-name (boot/tmp-path json-file)
-              new-target (io/file tmp (replace-extension json-name))]
-          (io/make-parents new-target)
-          (spit new-target
-            (compile-source json-name (slurp (boot/tmp-file json-file))))))
-      (-> fileset
-        (boot/add-resource tmp)
-        (boot/rm json-files)
-        (boot/commit!)))))
+  [o output VAL str "output path"]
+  (let [last-files (atom nil)]
+    (boot/with-pre-wrap fileset
+      (let [json-files
+              (->> fileset
+                (boot/fileset-diff @last-files)
+                (boot/input-files)
+                (boot/by-re [#"\.json$" #"\.edn$" #"\.cirru$"]))
+            tmp (io/file (or output "compiled/"))]
+        (reset! last-files fileset)
+        (doseq [json-file json-files]
+          (let [json-name (boot/tmp-path json-file)
+                new-target (io/file tmp (replace-extension json-name))]
+            (io/make-parents new-target)
+            (spit new-target
+              (compile-source json-name (slurp (boot/tmp-file json-file))))))
+        (-> fileset
+          (boot/add-resource tmp)
+          (boot/rm json-files)
+          (boot/commit!))))))
