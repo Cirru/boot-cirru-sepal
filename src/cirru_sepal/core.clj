@@ -14,7 +14,7 @@
   (-> source-path
     (replace-first ".cirru" "")
     (replace-first ".json" "")
-    (replace-first ".edn" "")))
+    (replace-first ".ir" "")))
 
 (defn- is-cirru [f]
   (some? (re-matches #".*\.cirru" f)))
@@ -23,7 +23,7 @@
   (some? (re-matches #".*\.json" f)))
 
 (defn- is-edn [f]
-  (some? (re-matches #".*\.edn" f)))
+  (some? (re-matches #".*\.ir" f)))
 
 (defn- is-source [f]
   (or
@@ -57,7 +57,7 @@
               (->> fileset
                 (boot/fileset-diff @last-files)
                 (boot/input-files)
-                (boot/by-re [#"\.json$" #"\.edn$" #"\.cirru$"]))]
+                (boot/by-re [#"\.json$" #"\.ir$" #"\.cirru$"]))]
         (reset! last-files fileset)
         (doseq [json-file json-files]
           (let [json-name (boot/tmp-path json-file)

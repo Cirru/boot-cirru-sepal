@@ -10,7 +10,7 @@
 
 (require '[cirru-sepal.core :refer :all])
 
-(def +version+ "0.1.8")
+(def +version+ "0.1.9")
 
 (task-options!
   pom {:project     'cirru/boot-cirru-sepal

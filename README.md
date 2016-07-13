@@ -19,7 +19,7 @@ Supported extensions:
 
 * `.cirru`
 * `.json`
-* `.edn`
+* `.ir` for C**ir**ru EDN, see https://github.com/Cirru/vectors-format
 
 ### License
 
