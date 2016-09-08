@@ -7,7 +7,7 @@ boot task for Cirru Sepal
 [![Clojars Project](https://img.shields.io/clojars/v/cirru/boot-cirru-sepal.svg)](https://clojars.org/cirru/boot-cirru-sepal)
 
 ```clojure
-[cirru/boot-cirru-sepal "0.1.10"]
+[cirru/boot-cirru-sepal "0.1.11"]
 ```
 
 ```clojure
